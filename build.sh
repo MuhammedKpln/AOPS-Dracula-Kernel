@@ -15,7 +15,7 @@
 #
 
 KERNEL_NAME="Dracula_KERNEL"
-KERNEL_VERSION="1.0"
+KERNEL_VERSION="1.1"
 
 if [ $1 == 1 ] || [ $1 == 3 ] ; then
 	export MODEL=herolte
