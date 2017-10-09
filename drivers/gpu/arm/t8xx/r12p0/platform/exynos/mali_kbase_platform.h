@@ -103,6 +103,7 @@ typedef enum {
 	GPU_MAX_CLOCK = 0,
 	GPU_MAX_CLOCK_LIMIT,
 	GPU_MIN_CLOCK,
+	GPU_MIN_CLOCK_LIMIT,
 	GPU_DVFS_START_CLOCK,
 	GPU_DVFS_BL_CONFIG_CLOCK,
 	GPU_GOVERNOR_TYPE,
@@ -141,9 +142,10 @@ typedef enum {
 	GPU_EARLY_CLK_GATING,
 	GPU_DVS,
 	GPU_PERF_GATHERING,
-#ifdef MALI_SEC_HWCNT
+#ifdef CONFIG_MALI_SEC_HWCNT
 	GPU_HWCNT_GATHERING,
 	GPU_HWCNT_GPR,
+	GPU_HWCNT_PROFILE,
 	GPU_HWCNT_POLLING_TIME,
 	GPU_HWCNT_UP_STEP,
 	GPU_HWCNT_DOWN_STEP,
@@ -315,6 +317,7 @@ struct exynos_context {
 	int gpu_max_clock;
 	int gpu_max_clock_limit;
 	int gpu_min_clock;
+	int gpu_min_clock_limit;
 	int gpu_dvfs_start_clock;
 	int gpu_dvfs_config_clock;
 	int user_max_lock_input;
@@ -354,7 +357,7 @@ struct exynos_context {
 	bool power_status;
 
 	bool perf_gathering_status;
-#ifdef MALI_SEC_HWCNT
+#ifdef CONFIG_MALI_SEC_HWCNT
 	bool hwcnt_gathering_status;
 	bool hwcnt_gpr_status;
 	int hwcnt_polling_speed;
@@ -369,6 +372,7 @@ struct exynos_context {
 
 	bool hwcnt_bt_clk;
 	int hwcnt_allow_vertex_throttle;
+	bool hwcnt_profile;
 #endif
 
 	int polling_speed;
@@ -396,6 +400,7 @@ struct exynos_context {
 	gpu_attribute *attrib;
 	int mo_min_clock;
 	int *save_cpu_max_freq;
+	const struct kbase_pm_policy *cur_policy;
 };
 
 struct kbase_device *gpu_get_device_structure(void);

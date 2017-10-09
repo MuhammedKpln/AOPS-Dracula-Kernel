@@ -1,4 +1,4 @@
-/* drivers/gpu/arm/.../platform/gpu_dvfs_handler.c
+/* drivers/gpu/arm/.../platform/gpu_dvfs_handler.h
  *
  * Copyright 2011 by S.LSI. Samsung Electronics Inc.
  * San#24, Nongseo-Dong, Giheung-Gu, Yongin, Korea
@@ -11,119 +11,83 @@
  */
 
 /**
- * @file gpu_dvfs_handler.c
+ * @file gpu_dvfs_handler.h
  * DVFS
  */
 
-#include <mali_kbase.h>
+#ifndef _GPU_DVFS_HANDLER_H_
+#define _GPU_DVFS_HANDLER_H_
 
-#include "mali_kbase_platform.h"
-#include "gpu_control.h"
-#include "gpu_dvfs_handler.h"
-#include "gpu_dvfs_governor.h"
+#define DVFS_ASSERT(x) \
+do { if (x) break; \
+	printk(KERN_EMERG "### ASSERTION FAILED %s: %s: %d: %s\n", __FILE__, __func__, __LINE__, #x); dump_stack(); \
+} while (0)
 
-extern struct kbase_device *pkbdev;
+typedef enum {
+	GPU_DVFS_MAX_LOCK = 0,
+	GPU_DVFS_MIN_LOCK,
+	GPU_DVFS_MAX_UNLOCK,
+	GPU_DVFS_MIN_UNLOCK,
+} gpu_dvfs_lock_command;
 
-#ifdef CONFIG_MALI_DVFS
-int kbase_platform_dvfs_event(struct kbase_device *kbdev, u32 utilisation)
-{
-	struct exynos_context *platform;
+typedef enum {
+	GPU_DVFS_BOOST_SET = 0,
+	GPU_DVFS_BOOST_UNSET,
+	GPU_DVFS_BOOST_GPU_UNSET,
+	GPU_DVFS_BOOST_END,
+} gpu_dvfs_boost_command;
 
-	int mif , i;
-	int *mif_min_table;
-	int table_size;
+int kbase_platform_dvfs_event(struct kbase_device *kbdev, u32 utilisation);
+int gpu_dvfs_handler_init(struct kbase_device *kbdev);
+int gpu_dvfs_handler_deinit(struct kbase_device *kbdev);
 
-	platform = (struct exynos_context *) kbdev->platform_context;
-	mif_min_table = get_mif_table(&table_size);
+/* gpu_dvfs_api.c */
+int gpu_set_target_clk_vol(int clk, bool pending_is_allowed);
+int gpu_set_target_clk_vol_pending(int clk);
+int gpu_dvfs_boost_lock(gpu_dvfs_boost_command boost_command);
+int gpu_dvfs_clock_lock(gpu_dvfs_lock_command lock_command, gpu_dvfs_lock_type lock_type, int clock);
+void gpu_dvfs_timer_control(bool enable);
+int gpu_dvfs_on_off(bool enable);
+int gpu_dvfs_governor_change(int governor_type);
+int gpu_dvfs_init_time_in_state(void);
+int gpu_dvfs_update_time_in_state(int clock);
+int gpu_dvfs_get_level(int clock);
+int gpu_dvfs_get_level_clock(int clock);
+int gpu_dvfs_get_stock_level(int clock);
+int gpu_dvfs_get_voltage(int clock);
+int gpu_dvfs_get_cur_asv_abb(void);
+int gpu_dvfs_get_clock(int level);
+int gpu_dvfs_get_step(void);
 
-	DVFS_ASSERT(platform);
+int gpu_dvfs_decide_max_clock(struct exynos_context *platform);
 
-	if (!platform->perf_gathering_status) {
-		mutex_lock(&platform->gpu_dvfs_handler_lock);
-		if (gpu_control_is_power_on(kbdev)) {
-			int clk = 0;
-			gpu_dvfs_calculate_env_data(kbdev);
-			clk = gpu_dvfs_decide_next_freq(kbdev, platform->env_data.utilization);
-			gpu_set_target_clk_vol(clk, true);
-		}
-		mutex_unlock(&platform->gpu_dvfs_handler_lock);
-		return 0;
-	}
-	else {
-		mutex_lock(&platform->gpu_dvfs_handler_lock);
-		gpu_dvfs_calculate_env_data_ppmu(kbdev);
-		mif = platform->table[platform->step].mem_freq;
-		if (platform->env_data.perf < 300)
-		{
-			for (i = 0 ; i < table_size; i++)
-			{
-				if (mif == mif_min_table[i])
-					break;
-			}
-			if (i > 0)
-				mif = mif_min_table[i-1];
-		}
+/* gpu_utilization */
+int gpu_dvfs_start_env_data_gathering(struct kbase_device *kbdev);
+int gpu_dvfs_stop_env_data_gathering(struct kbase_device *kbdev);
+int gpu_dvfs_reset_env_data(struct kbase_device *kbdev);
+int gpu_dvfs_calculate_env_data(struct kbase_device *kbdev);
+int gpu_dvfs_calculate_env_data_ppmu(struct kbase_device *kbdev);
+int gpu_dvfs_utilization_init(struct kbase_device *kbdev);
+int gpu_dvfs_utilization_deinit(struct kbase_device *kbdev);
 
-		if (gpu_control_is_power_on(kbdev)) {
-			int clk = 0;
-			gpu_dvfs_calculate_env_data(kbdev);
-			clk = gpu_dvfs_decide_next_freq(kbdev, platform->env_data.utilization);
-			gpu_set_target_clk_vol(clk, true);
-			gpu_mif_pmqos(platform, mif);
-		}
-		mutex_unlock(&platform->gpu_dvfs_handler_lock);
-	}
+/* gpu_pmqos.c */
+typedef enum {
+	GPU_CONTROL_PM_QOS_INIT = 0,
+	GPU_CONTROL_PM_QOS_DEINIT,
+	GPU_CONTROL_PM_QOS_SET,
+	GPU_CONTROL_PM_QOS_RESET,
+	GPU_CONTROL_PM_QOS_EGL_SET,
+	GPU_CONTROL_PM_QOS_EGL_RESET,
+} gpu_pmqos_state;
 
-	GPU_LOG(DVFS_DEBUG, DUMMY, 0u, 0u, "dvfs hanlder is called\n");
-
-	return 0;
-}
-
-int gpu_dvfs_handler_init(struct kbase_device *kbdev)
-{
-	struct exynos_context *platform = (struct exynos_context *) kbdev->platform_context;
-
-	DVFS_ASSERT(platform);
-
-	if (!platform->dvfs_status)
-		platform->dvfs_status = true;
-
+int gpu_pm_qos_command(struct exynos_context *platform, gpu_pmqos_state state);
+int gpu_mif_pmqos(struct exynos_context *platform, int mem_freq);
 #ifdef CONFIG_MALI_DVFS_USER
-	platform->mif_min_step = -1;
-	platform->int_min_step = -1;
-	platform->apollo_min_step = -1;
-	platform->atlas_min_step = -1;
-	proactive_pm_qos_command(platform, GPU_CONTROL_PM_QOS_INIT);
+int proactive_pm_qos_command(struct exynos_context *platform, gpu_pmqos_state state);
+int gpu_mif_min_pmqos(struct exynos_context *platform, int mem_step);
+int gpu_int_min_pmqos(struct exynos_context *platform, int int_step);
+int gpu_apollo_min_pmqos(struct exynos_context *platform, int apollo_step);
+int gpu_atlas_min_pmqos(struct exynos_context *platform, int atlas_step);
+int gpu_dvfs_update_hwc(struct kbase_device *kbdev);
 #endif
-	gpu_pm_qos_command(platform, GPU_CONTROL_PM_QOS_INIT);
-
-	gpu_set_target_clk_vol(platform->table[platform->step].clock, false);
-
-	GPU_LOG(DVFS_INFO, DUMMY, 0u, 0u, "dvfs handler initialized\n");
-	return 0;
-}
-
-int gpu_dvfs_handler_deinit(struct kbase_device *kbdev)
-{
-	struct exynos_context *platform = (struct exynos_context *) kbdev->platform_context;
-
-	DVFS_ASSERT(platform);
-
-	if (platform->dvfs_status)
-		platform->dvfs_status = false;
-
-	gpu_pm_qos_command(platform, GPU_CONTROL_PM_QOS_DEINIT);
-#ifdef CONFIG_MALI_DVFS_USER
-	proactive_pm_qos_command(platform, GPU_CONTROL_PM_QOS_DEINIT);
-#endif
-
-	GPU_LOG(DVFS_INFO, DUMMY, 0u, 0u, "dvfs handler de-initialized\n");
-	return 0;
-}
-#else
-#define gpu_dvfs_event_proc(q) do { } while (0)
-int kbase_platform_dvfs_event(struct kbase_device *kbdev, u32 utilisation)
-{
-	return 0;
-}
-#endif /* CONFIG_MALI_DVFS */
+#endif /* _GPU_DVFS_HANDLER_H_ */
