@@ -6,7 +6,7 @@
 properties() {
 kernel.string=Dracula Kernel @ xelisa
 kernel.name=Feith1453
-kernel.version=1.1
+kernel.version=1.5
 do.devicecheck=1
 do.modules=0
 do.cleanup=1
