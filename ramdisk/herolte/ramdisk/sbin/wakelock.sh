@@ -19,10 +19,6 @@ mount -t rootfs -o remount,rw rootfs
 mount -o remount,rw -t auto /system
 mount -o remount,rw /data
 
-# Define logfile path
-LOGFILE="/data/dracula-kernel.log"
-
-
 # Google play services wakelock fix
 sleep 1
 su -c "pm enable com.google.android.gms/.update.SystemUpdateActivity"
@@ -36,7 +32,6 @@ su -c "pm enable com.google.android.gsf/.update.SystemUpdateService"
 su -c "pm enable com.google.android.gsf/.update.SystemUpdateService$Receiver"
 su -c "pm enable com.google.android.gsf/.update.SystemUpdateService$SecretCodeReceiver"
 
-echo $(date) "GooglePlay wakelock fix executed successfully" >> $LOGFILE
 
 mount -o remount,ro -t auto /
 mount -t rootfs -o remount,ro rootfs

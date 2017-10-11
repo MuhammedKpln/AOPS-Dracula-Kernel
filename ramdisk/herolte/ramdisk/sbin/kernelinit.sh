@@ -38,25 +38,11 @@ echo 1586000 > /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq;
 echo 130000 > /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq;
 
 # miscellaneous
-	
-# storage - internal
-echo "cfq" > /sys/block/sda/queue/scheduler
-echo "128" > /sys/block/sda/queue/read_ahead_kb
-echo "0" > /sys/block/sda/queue/rq_affinity
-echo "0" > /sys/block/sda/queue/iostats
-
-# storage - external
-echo "cfq" > /sys/block/mmcblk0/queue/scheduler
-echo "128" > /sys/block/mmcblk0/queue/read_ahead_kb
-echo "0" > /sys/block/mmcblk0/queue/rq_affinity
-echo "0" > /sys/block/mmcblk0/queue/iostats
-
-
 
 # Set I/O Scheduler tweaks mmcblk0
 #favoritus
 	chmod 644 /sys/block/mmcblk0/queue/scheduler
-	echo "maple" > /sys/block/mmcblk0/queue/scheduler
+	echo "zen" > /sys/block/mmcblk0/queue/scheduler
 	echo "512" > /sys/block/mmcblk0/queue/read_ahead_kb
   chmod 644 /sys/block/mmcblk0/queue/iosched/writes_starved
 	echo "4" > /sys/block/mmcblk0/queue/iosched/writes_starved
@@ -70,7 +56,7 @@ echo "0" > /sys/block/mmcblk0/queue/iostats
 
 # Set I/O Scheduler tweaks sda
   chmod 644 /sys/block/sda/queue/scheduler
-	echo "maple" > /sys/block/sda/queue/scheduler
+	echo "zen" > /sys/block/sda/queue/scheduler
 	echo "256" > /sys/block/sda/queue/read_ahead_kb
         echo "5" > /sys/block/sda/bdi/min_ratio
         echo "2" > /sys/block/sda/queue/rq_affinity
@@ -85,26 +71,18 @@ echo "0" > /sys/block/mmcblk0/queue/iostats
 
 # Set I/O Scheduler tweaks sdb
 	chmod 644 /sys/block/sdb/queue/scheduler
-  echo cfq > /sys/block/sdb/queue/scheduler
+  echo "zen" > /sys/block/sdb/queue/scheduler
 
 # Set I/O Scheduler tweaks sdc
 	chmod 644 /sys/block/sdc/queue/scheduler
-	echo cfq > /sys/block/sdc/queue/scheduler
+	echo "zen" > /sys/block/sdc/queue/scheduler
 
 # Set I/O Scheduler tweaks sdd
 	chmod 644 /sys/block/sdd/queue/scheduler
-	echo cfq > /sys/block/sdd/queue/scheduler
+	echo "zen" > /sys/block/sdd/queue/scheduler
 
 # network
-sysctl -w net.ipv4.tcp_congestion_control=westwood
-
-
-# CPU freq. values
-echo 2288000 > /sys/devices/system/cpu/cpu4/cpufreq/scaling_max_freq;
-echo 416000 > /sys/devices/system/cpu/cpu4/cpufreq/scaling_min_freq;
-echo 1586000 > /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq;
-echo 130000 > /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq;
-
+sysctl -w net.ipv4.tcp_congestion_control=westwoo
 
 # TWEAKS
 # morogoku
@@ -132,10 +110,6 @@ echo 130000 > /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq;
 #-------------------------
 # KERNEL INIT VALUES
 #-------------------------
-
-    # Led Fade-out
-    echo 700 > /sys/class/sec/led/led_notification_ramp_down;
-	
 	
 # Selinux
 echo "0" > /sys/fs/selinux/enforce
@@ -173,9 +147,6 @@ echo "0" > /sys/fs/selinux/enforce
 	# sqlite3
 	$BB chown 0.0 /system/xbin/sqlite3;
 	$BB chmod 755 /system/xbin/sqlite3;
-
-	# Fix SafetyNet by Repulsa
-	$BB chmod 640 /sys/fs/selinux/enforce
 
 #-------------------------
 
